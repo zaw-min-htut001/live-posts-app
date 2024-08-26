@@ -22,4 +22,11 @@ class PostFactory extends Factory
             'body' => []
         ];
     }
+
+    public function untitled()
+    {
+        return $this->state([
+                'body' => 'OK post'
+        ]);
+    }
 }
