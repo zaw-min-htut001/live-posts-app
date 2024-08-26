@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\Post;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Database\Seeders\Traits\TruncateTable;
+use Database\Factories\Helpers\FactoryHelper;
 use Database\Seeders\Traits\DisableForeignKeys;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
