@@ -21,6 +21,9 @@ class Post extends Model
         'body' => 'array'
     ];
 
+    // protected $appends = [
+    //     'title_upper_case'
+    // ];
     // title accessor
     public function getTitleUpperCaseAttribute()
     {
