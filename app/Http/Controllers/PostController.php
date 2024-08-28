@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Resources\PostResource;
 
 class PostController extends Controller
 {
@@ -15,8 +17,10 @@ class PostController extends Controller
     public function index()
     {
         //
-        $post = Post::query()->get();
-        return response()->json($post, 200 );
+        $pageSizes = $request->page_size ?? 20 ;
+        $post = Post::query()->paginate($pageSizes);
+
+        return PostResource::collection($post);
     }
 
     /**
@@ -28,12 +32,17 @@ class PostController extends Controller
     public function store(Request $request)
     {
         //
-        $created = Post::create([
-            'title' => $request->title ,
-            'body' => $request->body ,
-        ]);
+        $created = DB::transaction(function () use ($request){
+            $created = Post::create([
+                'title' => $request->title ,
+                'body' => $request->body ,
+            ]);
+            // pivot table for
+            $created->users()->sync($request->user_ids);
+            return $created;
+        });
 
-        return response()->json($created  , 200);
+        return new PostResource($post);
     }
 
     /**
@@ -45,7 +54,7 @@ class PostController extends Controller
     public function show(Post $post)
     {
         //
-        return response()->json($post, 200);
+        return new PostResource($post);
     }
 
     /**
@@ -68,9 +77,7 @@ class PostController extends Controller
                 'error' => 'Post cannot update'
             ], 400);
         }
-        return response()->json([
-            'data' => $post
-        ], 200 );
+        return new PostResource($post);
     }
 
     /**
