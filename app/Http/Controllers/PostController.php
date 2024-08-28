@@ -6,6 +6,7 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\PostResource;
+use App\Repositories\PostRepositories;
 
 class PostController extends Controller
 {
@@ -29,20 +30,18 @@ class PostController extends Controller
      * @param  \App\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request , PostRepositories $repositories)
     {
         //
-        $created = DB::transaction(function () use ($request){
-            $created = Post::create([
-                'title' => $request->title ,
-                'body' => $request->body ,
-            ]);
-            // pivot table for
-            $created->users()->sync($request->user_ids);
-            return $created;
-        });
+        $created = $repositories->create($request->only([
+            'title', 'body', 'user_ids'
+        ]));
 
-        return new PostResource($post);
+        if (!$created) {
+            return response()->json(['error' => 'Post creation failed.'], 500);
+        }
+
+        return new PostResource($created);
     }
 
     /**
@@ -64,20 +63,14 @@ class PostController extends Controller
      * @param  \App\Models\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function edit(Request $request, Post $post)
+    public function edit(Request $request ,Post $post ,PostRepositories $repositories)
     {
         //
-        $post->update([
-            'title' => $request->title ?? $post->title ,
-            'body' => $request->body ?? $post->body ,
-        ]);
+        $updated = $repositories->update($post ,$request->only([
+            'title' , 'body' , 'user_ids'
+        ]));
 
-        if(!$post){
-            return response()->json([
-                'error' => 'Post cannot update'
-            ], 400);
-        }
-        return new PostResource($post);
+        return new PostResource($updated);
     }
 
     /**
@@ -86,10 +79,10 @@ class PostController extends Controller
      * @param  \App\Models\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Post $post)
+    public function destroy(Post $post, PostRepositories $repositories)
     {
         //
-        $post->forceDelete();
+        $repositories->forceDelete($post);
 
         return response()->json([
             'data' => 'success'
